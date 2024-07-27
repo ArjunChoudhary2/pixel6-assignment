@@ -50,6 +50,16 @@ const InputForm = () => {
     }
   };
 
+  const addAddressLine = (e) => {
+    e.preventDefault()
+    setAddressess([...addresses, '']);
+  }
+  
+  const removeAddressLine = (e) => {
+    e.preventDefault()
+    setAddressess(addresses.slice(0, -1))
+  }
+
   return (
     <div>
       <form
@@ -104,21 +114,22 @@ const InputForm = () => {
                 type="text"
                 placeholder="Address Line"
                 className="w-full my-4 p-4 rounded-r bg-gray-800"
+                maxLength="100"
               />
             </div>
           ))}
-          {addresses.length <= 10 ? (
-            <button className="text-black py-2 px-4 m-2 bg-white" onClick={addAddressLine}>+</button>
+          {addresses.length < 10 ? (
+            <button className="text-black py-2 px-4 m-2 bg-white" onClick={(e) => addAddressLine(e)}>+</button>
           ) : (
             ""
           )}
           {addresses.length > 2 ? (
-            <button className="text-black py-2 px-4 m-2 bg-white">-</button>
+            <button className="text-black py-2 px-4 m-2 bg-white" onClick={(e) => removeAddressLine(e)}>-</button>
           ) : (
             ""
           )}
         </div>
-
+          
         <span className="text-red-700 text-sm ">{validationError}</span>
         <button
           className="px-4 py-1 bg-purple-400 rounded-md"
