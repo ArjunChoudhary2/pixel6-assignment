@@ -2,21 +2,29 @@ import React, { useEffect, useRef, useState } from "react";
 import { validateForm, validatePan } from "../utils/formValidation";
 
 const InputForm = () => {
-  const pan = useRef(null);
+  const [pan,setPan] = useState('');
   const fullName = useRef(null);
   const email = useRef(null);
   const number = useRef(null);
   const [validationError, setValidationError] = useState(null);
   const [panResponse, setPanResponse] = useState(null);
   const [addresses, setAddressess] = useState(["", ""]);
+  const [postCode,setPostCode] = useState('');
+  const [state,setState] = useState('');
+  const [city,setCity] = useState('');
+
 
   useEffect(() => {
     console.log("called");
     if (validatePan(pan)) {
       checkPan();
-      console.log("called");
+      console.log("called pan");
     }
-  }, [pan?.current?.value]);
+    if (postCode?.length === 6) {
+      console.log('called postcode')
+      fetchArea();
+    }
+  }, [pan,postCode]);
 
   const validate = () => {
     setValidationError(
@@ -50,15 +58,38 @@ const InputForm = () => {
     }
   };
 
+  const fetchArea = async () => {
+    const postCodevalue = postCode
+    console.log(postCodevalue)
+    try {
+      const response = await fetch(
+        "https://lab.pixel6.co/api/get-postcode-details.php",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ postcode: postCodevalue }),
+        }
+      );
+      const json = await response.json();
+      console.log(json)
+      setState(json?.state[0]?.name)
+      setCity(json?.city[0]?.name)
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
   const addAddressLine = (e) => {
-    e.preventDefault()
-    setAddressess([...addresses, '']);
-  }
-  
+    e.preventDefault();
+    setAddressess([...addresses, ""]);
+  };
+
   const removeAddressLine = (e) => {
-    e.preventDefault()
-    setAddressess(addresses.slice(0, -1))
-  }
+    e.preventDefault();
+    setAddressess(addresses.slice(0, -1));
+  };
 
   return (
     <div>
@@ -68,7 +99,8 @@ const InputForm = () => {
       >
         <label className="font-semibold">PAN</label>
         <input
-          ref={pan}
+          value={pan}
+          onChange={e => setPan(e.target.value)}
           type="text"
           placeholder="Enter Pan Card Number"
           className="w-full my-4 p-4 rounded-lg bg-gray-800"
@@ -119,17 +151,52 @@ const InputForm = () => {
             </div>
           ))}
           {addresses.length < 10 ? (
-            <button className="text-black py-2 px-4 m-2 bg-white" onClick={(e) => addAddressLine(e)}>+</button>
+            <button
+              className="text-black py-2 px-4 m-2 bg-white"
+              onClick={(e) => addAddressLine(e)}
+            >
+              +
+            </button>
           ) : (
             ""
           )}
           {addresses.length > 2 ? (
-            <button className="text-black py-2 px-4 m-2 bg-white" onClick={(e) => removeAddressLine(e)}>-</button>
+            <button
+              className="text-black py-2 px-4 m-2 bg-white"
+              onClick={(e) => removeAddressLine(e)}
+            >
+              -
+            </button>
           ) : (
             ""
           )}
         </div>
-          
+        <div>
+          <label>Postcode</label>
+          <input
+            className="w-full my-4 p-4 rounded-r bg-gray-800"
+            type="number"
+            maxLength="6"
+            value={postCode}
+            onChange={e => setPostCode(e.target.value)}
+          ></input>
+          <label>State</label>
+          <input
+            className="w-full my-4 p-4 rounded-r bg-gray-800"
+            disabled
+            value={state}
+            type="text"
+            maxLength="6"
+          ></input>
+          <label>City</label>
+          <input
+            className="w-full my-4 p-4 rounded-r bg-gray-800"
+            disabled
+            value={city}
+            type="text"
+            maxLength="6"
+          ></input>
+        </div>
         <span className="text-red-700 text-sm ">{validationError}</span>
         <button
           className="px-4 py-1 bg-purple-400 rounded-md"
