@@ -5,11 +5,30 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { Provider } from "react-redux";
 import store from "./store/store";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import InputForm from "./components/InputForm";
+import CustomerListPage from "./pages/CustomerListPage";
+import CustomerDataPage from "./pages/CustomerDataPage";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <App />,
+  },
+  {
+    path: "/customer-list",
+    element: <CustomerListPage />,
+  },
+  {
+    path: "/customer-form",
+    element: <CustomerDataPage />,
+  },
+]);
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <Provider store={store}>
-    <App />
+    <RouterProvider router={router} />
   </Provider>
 );
 
