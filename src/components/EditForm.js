@@ -4,34 +4,37 @@ import { ColorRing } from "react-loader-spinner";
 import verifiedIcon from "../media/verified.png";
 import { checkPan, fetchArea } from "../utils/api";
 import { useDispatch, useSelector } from "react-redux";
-import { addCustomer, idCounter } from "../store/customerSlice";
-import { useNavigate } from "react-router-dom";
+import { addCustomer, deleteCustomer } from "../store/customerSlice";
+import { useNavigate, useParams } from "react-router-dom";
 
-const InputForm = () => {
-  //State for managing form data
+const EditForm = () => {
+  const { customerId } = useParams();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const customer = useSelector((state) =>
+    state.customers.customers.find((cust) => cust.id === parseInt(customerId))
+  );
+
   const [formData, setFormData] = useState({
-    pan: "",
-    fullName: "",
-    email: "",
-    number: "",
-    addresses: ["", ""],
-    postCode: "",
-    state: "",
-    city: "",
+    pan: customer?.pan || "",
+    fullName: customer?.fullName || "",
+    email: customer?.email || "",
+    number: customer?.number || "",
+    addresses: customer?.addresses || ["", ""],
+    postCode: customer?.postCode || "",
+    state: customer?.state || "",
+    city: customer?.city || "",
   });
   const [validationError, setValidationError] = useState(null);
   const [isPanLoading, setIsPanLoading] = useState(false);
   const [isPostCodeLoading, setIsPostCodeLoading] = useState(false);
   const [isPanValid, setIsPanValid] = useState(false);
-  const dispatch = useDispatch();
-  const currentUserId = useSelector((state) => state.customers.idCount);
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (validatePan(formData.pan)) {
       checkPanWrapper();
     }
-  }, [formData.pan]);
+  }, [formData.pan]); 
 
   useEffect(() => {
     if (formData.postCode.length === 6) {
@@ -39,32 +42,7 @@ const InputForm = () => {
     }
   }, [formData.postCode]);
 
-  /**
-   * Validates form and submits customer data
-   * Then navigates to customer list page
-   */
-  const validate = () => {
-    const isFormValid = validateForm(
-      formData.pan,
-      formData.fullName,
-      formData.email,
-      formData.number,
-      formData.addresses[0],
-      formData.postCode
-    );
-    setValidationError(isFormValid);
-    if (isFormValid === "validated") {
-      const createdUser = {
-        ...formData,
-        id: currentUserId,
-      };
-      dispatch(idCounter());
-      dispatch(addCustomer(createdUser));
-      navigate("/customer-list");
-    }
-  };
-
-  // Validates PAN and updates fullName
+   // Validates PAN and updates fullName 
   const checkPanWrapper = async () => {
     setIsPanLoading(true);
     setIsPanValid(false);
@@ -90,18 +68,40 @@ const InputForm = () => {
       setIsPostCodeLoading(false);
       setFormData((prevFormData) => ({
         ...prevFormData,
-        state: json?.state[0]?.name || "",
-        city: json?.city[0]?.name || "",
+        state: json?.state[0]?.name || prevFormData.state,
+        city: json?.city[0]?.name || prevFormData.city,
       }));
     } catch (error) {
       setIsPostCodeLoading(false);
     }
   };
 
-  const handleInputChange = (e) => {
+  const validate = () => {
+    const isFormValid = validateForm(
+      formData.pan,
+      formData.fullName,
+      formData.email,
+      formData.number,
+      formData.addresses[0],
+      formData.postCode
+    );
+    setValidationError(isFormValid);
+    if (isFormValid === "validated") {
+      const updatedCustomer = {
+        ...customer,
+        ...formData,
+        fullName: formData.fullName ,
+      };
+      dispatch(deleteCustomer(customer.id));
+      dispatch(addCustomer(updatedCustomer));
+      navigate("/customer-list");
+    }
+  };
+
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
+    setFormData((prevData) => ({
+      ...prevData,
       [name]: value,
     }));
   };
@@ -140,7 +140,7 @@ const InputForm = () => {
           <input
             name="pan"
             value={formData.pan}
-            onChange={handleInputChange}
+            onChange={handleChange}
             type="text"
             placeholder="Enter Pan Card Number"
             className="w-full my-4 p-4 rounded-lg bg-gray-800"
@@ -171,8 +171,8 @@ const InputForm = () => {
         <label className="font-semibold">Full Name</label>
         <input
           name="fullName"
-          value={formData.fullName}
-          onChange={handleInputChange}
+          value={formData.fullName }
+          onChange={handleChange}
           type="text"
           placeholder="Enter Full Name"
           className="w-full my-4 p-4 rounded-lg bg-gray-800"
@@ -183,7 +183,7 @@ const InputForm = () => {
         <input
           name="email"
           value={formData.email}
-          onChange={handleInputChange}
+          onChange={handleChange}
           type="email"
           placeholder="Email"
           className="w-full my-4 p-4 rounded-lg bg-gray-800"
@@ -196,7 +196,7 @@ const InputForm = () => {
           <input
             name="number"
             value={formData.number}
-            onChange={handleInputChange}
+            onChange={handleChange}
             type="text"
             placeholder="Enter Mobile Number"
             className="w-full my-4 p-4 rounded-r bg-gray-800"
@@ -243,7 +243,7 @@ const InputForm = () => {
             <input
               name="postCode"
               value={formData.postCode}
-              onChange={handleInputChange}
+              onChange={handleChange}
               className="w-full my-4 p-4 rounded-r bg-gray-800"
               type="text"
               maxLength="6"
@@ -286,7 +286,9 @@ const InputForm = () => {
             type="text"
           />
         </div>
-        {validationError && <p>{validationError}</p>}
+        {validationError !== "validated" && (
+          <span className="text-red-700 text-sm ">{validationError}</span>
+        )}
         <button
           className="bg-white text-black w-full mt-4 py-4 rounded-lg"
           onClick={validate}
@@ -298,4 +300,4 @@ const InputForm = () => {
   );
 };
 
-export default InputForm;
+export default EditForm;

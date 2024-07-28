@@ -7,11 +7,14 @@ export const checkPan = async (pan) => {
         },
         body: JSON.stringify({ panNumber: pan }),
       });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const json = await response.json();
       return json;
     } catch (error) {
-      console.error("Error:", error);
-      throw error;
+      console.error("Error fetching PAN details:", error);
+      throw error; 
     }
   };
   
@@ -27,10 +30,13 @@ export const checkPan = async (pan) => {
           body: JSON.stringify({ postcode }),
         }
       );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const json = await response.json();
       return json;
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error fetching area details:", error);
       throw error;
     }
   };
