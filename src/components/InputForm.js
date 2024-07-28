@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { validateForm, validatePan } from "../utils/formValidation";
 import { ColorRing } from "react-loader-spinner";
 import verifiedIcon from "../media/verified.png";
+import { checkPan, fetchArea } from "../utils/api"; // Import the API functions
+import { useDispatch } from "react-redux";
+import { addCustomer } from "../store/customerSlice";
 
 const InputForm = () => {
   const [pan, setPan] = useState("");
@@ -16,13 +19,14 @@ const InputForm = () => {
   const [isPanLoading, setIsPanLoading] = useState(false);
   const [isPostCodeLoading, setIsPostCodeLoading] = useState(false);
   const [isPanValid, setIsPanValid] = useState(false);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (validatePan(pan)) {
-      checkPan();
+      checkPanWrapper();
     }
     if (postCode?.length === 6) {
-      fetchArea();
+      fetchAreaWrapper();
     }
   }, [pan, postCode]);
 
@@ -45,55 +49,34 @@ const InputForm = () => {
         panID: pan,
         postCode: postCode,
       };
-      console.log(createdUser);
+      dispatch(addCustomer(createdUser));
     }
   };
 
-  const checkPan = async () => {
+  const checkPanWrapper = async () => {
     setIsPanLoading(true);
     setIsPanValid(false);
-    const panValue = pan;
     try {
-      const response = await fetch("https://lab.pixel6.co/api/verify-pan.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ panNumber: panValue }),
-      });
-      const json = await response.json();
+      const json = await checkPan(pan);
       setIsPanValid(json?.isValid);
       setIsPanLoading(false);
       if (json?.isValid) {
         setFullName(json?.fullName);
       }
     } catch (error) {
-      console.error("Error:", error);
       setIsPanLoading(false);
     }
   };
 
-  const fetchArea = async () => {
+  const fetchAreaWrapper = async () => {
     setIsPostCodeLoading(true);
-    const postCodevalue = postCode;
     try {
-      const response = await fetch(
-        "https://lab.pixel6.co/api/get-postcode-details.php",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ postcode: postCodevalue }),
-        }
-      );
-      const json = await response.json();
+      const json = await fetchArea(postCode);
       setIsPostCodeLoading(false);
       setState(json?.state[0]?.name);
       setCity(json?.city[0]?.name);
     } catch (error) {
       setIsPostCodeLoading(false);
-      console.error("Error:", error);
     }
   };
 
@@ -182,7 +165,7 @@ const InputForm = () => {
         <div>
           <label className="font-semibold">Add Address:</label>
           {addresses.map((address, index) => (
-            <div>
+            <div key={index}>
               <h2>Address Line {index + 1}</h2>
               <input
                 type="text"
