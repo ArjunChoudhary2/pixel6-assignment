@@ -1,45 +1,58 @@
 import React, { useEffect, useRef, useState } from "react";
 import { validateForm, validatePan } from "../utils/formValidation";
+import { ColorRing } from "react-loader-spinner";
+import verifiedIcon from "../media/verified.png";
 
 const InputForm = () => {
-  const [pan,setPan] = useState('');
-  const fullName = useRef(null);
+  const [pan, setPan] = useState("");
+  const [fullName, setFullName] = useState("");
   const email = useRef(null);
   const number = useRef(null);
   const [validationError, setValidationError] = useState(null);
-  const [panResponse, setPanResponse] = useState(null);
   const [addresses, setAddressess] = useState(["", ""]);
-  const [postCode,setPostCode] = useState('');
-  const [state,setState] = useState('');
-  const [city,setCity] = useState('');
-
+  const [postCode, setPostCode] = useState("");
+  const [state, setState] = useState("");
+  const [city, setCity] = useState("");
+  const [isPanLoading, setIsPanLoading] = useState(false);
+  const [isPostCodeLoading, setIsPostCodeLoading] = useState(false);
+  const [isPanValid, setIsPanValid] = useState(false);
 
   useEffect(() => {
-    console.log("called");
     if (validatePan(pan)) {
       checkPan();
-      console.log("called pan");
     }
     if (postCode?.length === 6) {
-      console.log('called postcode')
       fetchArea();
     }
-  }, [pan,postCode]);
+  }, [pan, postCode]);
 
   const validate = () => {
-    setValidationError(
-      validateForm(
-        pan?.current?.value,
-        fullName?.current?.value,
-        email?.current?.value,
-        number?.current?.value
-      )
+    let isFormValid = validateForm(
+      pan,
+      fullName,
+      email?.current?.value,
+      number?.current?.value,
+      addresses[0],
+      postCode
     );
-    console.log(validationError);
+    setValidationError(isFormValid);
+    if (isFormValid === "validated") {
+      
+      let createdUser = {
+        name: fullName,
+        email: email?.current?.value,
+        number: number?.current?.value,
+        panID: pan,
+        postCode: postCode,
+      };
+      console.log(createdUser);
+    }
   };
 
   const checkPan = async () => {
-    const panValue = pan?.current?.value;
+    setIsPanLoading(true);
+    setIsPanValid(false);
+    const panValue = pan;
     try {
       const response = await fetch("https://lab.pixel6.co/api/verify-pan.php", {
         method: "POST",
@@ -49,18 +62,20 @@ const InputForm = () => {
         body: JSON.stringify({ panNumber: panValue }),
       });
       const json = await response.json();
-      setPanResponse(json);
+      setIsPanValid(json?.isValid);
+      setIsPanLoading(false);
       if (json?.isValid) {
-        fullName.current.value = json?.fullName;
+        setFullName(json?.fullName);
       }
     } catch (error) {
       console.error("Error:", error);
+      setIsPanLoading(false);
     }
   };
 
   const fetchArea = async () => {
-    const postCodevalue = postCode
-    console.log(postCodevalue)
+    setIsPostCodeLoading(true);
+    const postCodevalue = postCode;
     try {
       const response = await fetch(
         "https://lab.pixel6.co/api/get-postcode-details.php",
@@ -73,10 +88,11 @@ const InputForm = () => {
         }
       );
       const json = await response.json();
-      console.log(json)
-      setState(json?.state[0]?.name)
-      setCity(json?.city[0]?.name)
+      setIsPostCodeLoading(false);
+      setState(json?.state[0]?.name);
+      setCity(json?.city[0]?.name);
     } catch (error) {
+      setIsPostCodeLoading(false);
       console.error("Error:", error);
     }
   };
@@ -91,6 +107,12 @@ const InputForm = () => {
     setAddressess(addresses.slice(0, -1));
   };
 
+  const handleAddressChange = (e, index) => {
+    let updatedAddress = [...addresses];
+    updatedAddress[index] = e.target.value;
+    setAddressess(updatedAddress);
+  };
+
   return (
     <div>
       <form
@@ -100,16 +122,36 @@ const InputForm = () => {
         <label className="font-semibold">PAN</label>
         <input
           value={pan}
-          onChange={e => setPan(e.target.value)}
+          onChange={(e) => setPan(e.target.value)}
           type="text"
           placeholder="Enter Pan Card Number"
           className="w-full my-4 p-4 rounded-lg bg-gray-800"
           maxLength="10"
           required
         />
+        <div>
+          {isPanValid && pan.length === 10 ? (
+            <img
+              className="h-[80px] w-[80px]"
+              src={verifiedIcon}
+              alt="verified"
+            />
+          ) : (
+            <ColorRing
+              visible={isPanLoading}
+              height="80"
+              width="80"
+              ariaLabel="color-ring-loading"
+              wrapperStyle={{}}
+              wrapperClass="color-ring-wrapper"
+              colors={["#e15b64", "#f47e60", "#f8b26a", "#abbd81", "#849b87"]}
+            />
+          )}
+        </div>
         <label className="font-semibold">Full Name</label>
         <input
-          ref={fullName}
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
           type="text"
           placeholder="Enter Full Name"
           className="w-full my-4 p-4 rounded-lg bg-gray-800"
@@ -147,6 +189,8 @@ const InputForm = () => {
                 placeholder="Address Line"
                 className="w-full my-4 p-4 rounded-r bg-gray-800"
                 maxLength="100"
+                value={address}
+                onChange={(e) => handleAddressChange(e, index)}
               />
             </div>
           ))}
@@ -175,18 +219,30 @@ const InputForm = () => {
           <label>Postcode</label>
           <input
             className="w-full my-4 p-4 rounded-r bg-gray-800"
-            type="number"
+            type="text"
             maxLength="6"
             value={postCode}
-            onChange={e => setPostCode(e.target.value)}
+            onChange={(e) => setPostCode(e.target.value)}
           ></input>
+          <div>
+            {postCode.length === 6 && (
+              <ColorRing
+                visible={isPostCodeLoading}
+                height="80"
+                width="80"
+                ariaLabel="color-ring-loading"
+                wrapperStyle={{}}
+                wrapperClass="color-ring-wrapper"
+                colors={["#e15b64", "#f47e60", "#f8b26a", "#abbd81", "#849b87"]}
+              />
+            )}
+          </div>
           <label>State</label>
           <input
             className="w-full my-4 p-4 rounded-r bg-gray-800"
             disabled
             value={state}
             type="text"
-            maxLength="6"
           ></input>
           <label>City</label>
           <input
@@ -194,15 +250,18 @@ const InputForm = () => {
             disabled
             value={city}
             type="text"
-            maxLength="6"
           ></input>
         </div>
-        <span className="text-red-700 text-sm ">{validationError}</span>
+
+        {validationError !== "validated" ? (
+          <span className="text-red-700 text-sm ">{validationError}</span>
+        ) : (
+          ""
+        )}
         <button
           className="px-4 py-1 bg-purple-400 rounded-md"
           onClick={() => {
             validate();
-            validatePan();
           }}
         >
           Submit
