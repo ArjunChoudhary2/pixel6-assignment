@@ -133,7 +133,7 @@ const EditForm = () => {
   };
 
   return (
-    <div className="w-1/2 bg-gray-700 p-10 rounded-md text-white">
+    <div className="w-10/12 sm:w-1/2 bg-gray-700 p-10 rounded-md text-white">
       <form onSubmit={(e) => e.preventDefault()} className="">
         <label className="font-semibold">PAN</label>
         <div className="flex items-center">
@@ -205,7 +205,6 @@ const EditForm = () => {
           />
         </div>
         <div>
-          <label className="font-semibold">Add Address:</label>
           {formData.addresses.map((address, index) => (
             <div key={index}>
               <h2>Address Line {index + 1}</h2>
@@ -222,7 +221,7 @@ const EditForm = () => {
           ))}
           {formData.addresses.length < 10 ? (
             <button
-              className="text-black py-2 px-4 m-2 bg-white"
+              className="text-black py-2 px-4 m-2 bg-white rounded-md"
               onClick={addAddressLine}
             >
               +
@@ -230,7 +229,7 @@ const EditForm = () => {
           ) : null}
           {formData.addresses.length > 2 ? (
             <button
-              className="text-black py-2 px-4 m-2 bg-white"
+              className="text-black py-2 px-4 m-2 bg-white rounded-sm"
               onClick={removeAddressLine}
             >
               -
