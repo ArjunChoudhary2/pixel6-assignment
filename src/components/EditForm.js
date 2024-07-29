@@ -54,7 +54,6 @@ const EditForm = () => {
         ...prevFormData,
         fullName: json?.fullName,
       }));
-      console.log(formData);
     } catch (error) {
       setIsPanLoading(false);
     }
