@@ -285,7 +285,7 @@ const EditForm = () => {
           />
         </div>
         {validationError !== "validated" && (
-          <span className="text-red-700 text-sm ">{validationError}</span>
+          <span className="text-center text-sm ">{validationError}</span>
         )}
         <button
           className="bg-white text-black w-full mt-4 py-4 rounded-lg"

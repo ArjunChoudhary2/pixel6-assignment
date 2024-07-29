@@ -284,7 +284,7 @@ const InputForm = () => {
             type="text"
           />
         </div>
-        {validationError && <p>{validationError}</p>}
+        <div className="text-center text-sm">{validationError && <p>{validationError}</p>}</div>
         <button
           className="bg-white text-black w-full mt-4 py-4 rounded-lg"
           onClick={validate}

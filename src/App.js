@@ -1,6 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import Header from "./components/Header";
+import { FaWpforms } from "react-icons/fa6";
+import { PiUserListBold } from "react-icons/pi";
 
 const App = () => {
   return (
@@ -10,15 +12,15 @@ const App = () => {
         <div className="flex flex-col text-center">
           <Link
             to="/customer-form"
-            className="my-2 text-xl font-semibold bg-black text-white py-2 px-2 rounded-xl shadow-lg"
+            className="flex items-center my-2 text-xl font-semibold bg-black text-white py-3 px-4 rounded-xl shadow-lg justify-center"
           >
-            Customer Form
+            <FaWpforms /> <div className="mx-2">Customer Form</div>
           </Link>
           <Link
             to="/customer-list"
-            className="my-2 text-xl font-semibold bg-white text-black py-2 px-2 rounded-xl shadow-lg border border-black"
+            className="flex items-center my-2 text-xl font-semibold bg-white text-black py-3 px-4 rounded-xl shadow-lg border border-black justify-center"
           >
-            Customer List
+            <PiUserListBold /> <div className="mx-2">Customer List</div>
           </Link>
         </div>
       </div>
